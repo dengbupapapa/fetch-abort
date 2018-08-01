@@ -22,5 +22,5 @@
 
 ## Community
 
-[github](https://github.com/dengbupapapa/fetch-abort）) 
-[npm](https://www.npmjs.com/package/fetch-abort）) 
+[github](https://github.com/dengbupapapa/fetch-abort)
+[npm](https://www.npmjs.com/package/fetch-abort)
