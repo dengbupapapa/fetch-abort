@@ -1,6 +1,6 @@
 {
     "name": "fetch-abort",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "fetch、abort",
     "main": "index.js",
     "scripts": {

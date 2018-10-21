@@ -6,9 +6,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-~function (win) {
+(function (win) {
 
-    var oldThen = Promise.prototype.then;
     var oldFetch = fetch;
 
     var ModificationFetch = function () {
@@ -29,20 +28,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function init() {
 
                 this.oldFetchPromise = oldFetch.apply(undefined, _toConsumableArray(this.opt));
-
                 this.oldFetchPromise.abort = this.abort.bind(this.oldFetchPromise);
-                this.oldFetchPromise.then = this.then.bind(this.oldFetchPromise, this.oldFetchPromise, this.then, this.abort);
+                this.oldThen = this.oldFetchPromise.then;
+                this.oldFetchPromise.then = this.then.bind(this.oldFetchPromise, this.oldFetchPromise, this.oldFetchPromise, this.then, this.abort, this.oldThen);
             }
         }, {
             key: "then",
-            value: function then(oldFetchPromise, _then, abort) {
+            value: function then(oldFetchPromise, curFetchPromise, _then, abort, oldThen) {
                 var _this = this;
 
-                var resFn = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function () {};
-                var rejFn = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : function () {};
+                var resFn = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : function () {};
+                var rejFn = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : function () {};
 
 
-                var afterPromise = oldThen.call(this, function () {
+                var afterPromise = oldThen.call(curFetchPromise, function () {
                     oldFetchPromise.abort = abort.bind(afterPromise); //把第一个promise的abort上下文指向下一个promise
                     if (_this.__abort) afterPromise.__abort = _this.__abort; // 传递 abort
                     if (!_this.__abort) return resFn.apply(undefined, arguments); //没阻断
@@ -53,7 +52,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
 
                 afterPromise.abort = abort.bind(afterPromise);
-                afterPromise.then = _then.bind(afterPromise, oldFetchPromise, _then, abort);
+                afterPromise.then = _then.bind(afterPromise, oldFetchPromise, afterPromise, _then, abort, oldThen);
 
                 return afterPromise;
             }
@@ -102,4 +101,4 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     for (var s in oldFetch) {
         fetch[s] = oldFetch[s];
     }
-}(window);
+})(window);

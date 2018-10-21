@@ -1,6 +1,5 @@
-~(function(win) {
+(function(win) {
 
-    let oldThen = Promise.prototype.then;
     let oldFetch = fetch;
 
     class ModificationFetch {
@@ -16,15 +15,15 @@
         init() {
 
             this.oldFetchPromise = oldFetch(...this.opt);
-
             this.oldFetchPromise.abort = this.abort.bind(this.oldFetchPromise);
-            this.oldFetchPromise.then = this.then.bind(this.oldFetchPromise, this.oldFetchPromise, this.then, this.abort);
+            this.oldThen = this.oldFetchPromise.then;
+            this.oldFetchPromise.then = this.then.bind(this.oldFetchPromise, this.oldFetchPromise, this.oldFetchPromise, this.then, this.abort,this.oldThen);
 
         }
 
-        then(oldFetchPromise, then, abort, resFn = () => {}, rejFn = () => {}) {
+        then(oldFetchPromise, curFetchPromise, then, abort, oldThen, resFn = () => {}, rejFn = () => {}) {
 
-            let afterPromise = oldThen.call(this, (...arg) => {
+            let afterPromise = oldThen.call(curFetchPromise,(...arg) => {
                 oldFetchPromise.abort = abort.bind(afterPromise); //把第一个promise的abort上下文指向下一个promise
                 if (this.__abort) afterPromise.__abort = this.__abort; // 传递 abort
                 if (!this.__abort) return resFn(...arg); //没阻断
@@ -35,7 +34,7 @@
             });
 
             afterPromise.abort = abort.bind(afterPromise);
-            afterPromise.then = then.bind(afterPromise, oldFetchPromise, then, abort);
+            afterPromise.then = then.bind(afterPromise, oldFetchPromise, afterPromise, then, abort, oldThen);
 
             return afterPromise
 
